@@ -281,9 +281,11 @@ static long do_dispatch(Response (Keymaster::*operation)(),
     return err;
 }
 
-static long get_auth_token_key(keymaster::UniquePtr<uint8_t[]>* key_buf,
-                               uint32_t* key_size) {
+static long get_auth_token_key(keymaster::UniquePtr<uint8_t[]>* out,
+                               uint32_t* out_size) {
     keymaster_key_blob_t key;
+    km_raw_buffer_resp args;
+
     long rc = device->GetAuthTokenKey(&key);
 
     if (rc != NO_ERROR) {
@@ -294,14 +296,18 @@ static long get_auth_token_key(keymaster::UniquePtr<uint8_t[]>* key_buf,
         return ERR_NOT_ENOUGH_BUFFER;
     }
 
-    key_buf->reset(new uint8_t[key.key_material_size]);
-    if (key_buf->get() == NULL) {
+    out->reset(new uint8_t[sizeof(args) + key.key_material_size]);
+    if (out->get() == NULL) {
         return ERR_NO_MEMORY;
     }
 
-    *key_size = key.key_material_size;
+    args.error = 0;
+    args.data_size = key.key_material_size;
 
-    memcpy(key_buf->get(), key.key_material, key.key_material_size);
+    *out_size = sizeof(args) + args.data_size;
+    memcpy(out->get(), &args, sizeof(args));
+    memcpy(out->get() + sizeof(args), key.key_material, args.data_size);
+
     return NO_ERROR;
 }
 
