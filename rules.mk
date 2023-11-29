@@ -172,7 +172,6 @@ ifdef TRUSTY_KM_RKP_VERSION
     MODULE_COMPILEFLAGS += -DTRUSTY_KM_RKP_VERSION=$(TRUSTY_KM_RKP_VERSION)
 endif
 
-include $(LOCAL_DIR)/atap/rules.mk
 include $(LOCAL_DIR)/ipc/rules.mk
 
 include make/trusted_app.mk
