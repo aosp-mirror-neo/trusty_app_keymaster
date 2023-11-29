@@ -22,13 +22,6 @@
 
 #include <memory>
 
-#ifndef DISABLE_ATAP_SUPPORT
-#include <libatap/libatap.h>
-// This assumes EC cert chains do not exceed 1k and other cert chains do not
-// exceed 5k.
-const size_t kMaxCaResponseSize = 20000;
-#endif
-
 namespace keymaster {
 
 GetVersion2Response TrustyKeymaster::GetVersion2(
@@ -297,29 +290,8 @@ void TrustyKeymaster::AtapGetCaRequest(const AtapGetCaRequestRequest& request,
     if (response == nullptr)
         return;
 
-#ifdef DISABLE_ATAP_SUPPORT
     // Not implemented.
     response->error = KM_ERROR_UNKNOWN_ERROR;
-    return;
-#else
-    uint8_t* ca_request;
-    uint32_t ca_request_size;
-    const Buffer& operation_start = request.data;
-    AtapResult result = atap_get_ca_request(
-            atap_ops_provider_.atap_ops(), operation_start.begin(),
-            operation_start.available_read(), &ca_request, &ca_request_size);
-    response->error = KM_ERROR_UNKNOWN_ERROR;
-    if (result != ATAP_RESULT_OK) {
-        return;
-    }
-    response->error = KM_ERROR_MEMORY_ALLOCATION_FAILED;
-    if (!response->data.Reinitialize(ca_request, ca_request_size)) {
-        atap_free(ca_request);
-        return;
-    }
-    atap_free(ca_request);
-    response->error = KM_ERROR_OK;
-#endif
 }
 
 void TrustyKeymaster::AtapSetCaResponseBegin(
@@ -328,21 +300,8 @@ void TrustyKeymaster::AtapSetCaResponseBegin(
     if (response == nullptr)
         return;
 
-#ifdef DISABLE_ATAP_SUPPORT
     // Not implemented.
     response->error = KM_ERROR_UNKNOWN_ERROR;
-    return;
-#else
-    response->error = KM_ERROR_INVALID_ARGUMENT;
-    if (request.ca_response_size > kMaxCaResponseSize) {
-        return;
-    }
-    response->error = KM_ERROR_MEMORY_ALLOCATION_FAILED;
-    if (!ca_response_.reserve(request.ca_response_size)) {
-        return;
-    }
-    response->error = KM_ERROR_OK;
-#endif
 }
 
 void TrustyKeymaster::AtapSetCaResponseUpdate(
@@ -351,17 +310,8 @@ void TrustyKeymaster::AtapSetCaResponseUpdate(
     if (response == nullptr)
         return;
 
-#ifdef DISABLE_ATAP_SUPPORT
     // Not implemented.
     response->error = KM_ERROR_UNKNOWN_ERROR;
-    return;
-#else
-    response->error = KM_ERROR_INSUFFICIENT_BUFFER_SPACE;
-    if (!ca_response_.write(request.data.begin(), request.data.buffer_size())) {
-        return;
-    }
-    response->error = KM_ERROR_OK;
-#endif
 }
 
 void TrustyKeymaster::AtapSetCaResponseFinish(
@@ -370,26 +320,8 @@ void TrustyKeymaster::AtapSetCaResponseFinish(
     if (response == nullptr)
         return;
 
-#ifdef DISABLE_ATAP_SUPPORT
     // Not implemented.
     response->error = KM_ERROR_UNKNOWN_ERROR;
-    return;
-#else
-    response->error = KM_ERROR_INVALID_INPUT_LENGTH;
-    if (ca_response_.available_read() != ca_response_.buffer_size()) {
-        LOG_E("Did not receive full CA Response message: %zu / %zu\n",
-              ca_response_.available_read(), ca_response_.buffer_size());
-        return;
-    }
-    response->error = KM_ERROR_UNKNOWN_ERROR;
-    AtapResult result = atap_set_ca_response(atap_ops_provider_.atap_ops(),
-                                             ca_response_.begin(),
-                                             ca_response_.available_read());
-    if (result == ATAP_RESULT_OK) {
-        response->error = KM_ERROR_OK;
-    }
-    ca_response_.Clear();
-#endif
 }
 
 void TrustyKeymaster::AtapReadUuid(const AtapReadUuidRequest& request,
@@ -423,19 +355,7 @@ void TrustyKeymaster::AtapSetProductId(const AtapSetProductIdRequest& request,
         return;
     }
 
-#ifdef DISABLE_ATAP_SUPPORT
     // Not implemented.
     response->error = KM_ERROR_UNKNOWN_ERROR;
-    return;
-#else
-    response->error = KM_ERROR_UNKNOWN_ERROR;
-    const Buffer& product_id = request.data;
-    uint32_t product_id_size = product_id.available_read();
-    if (product_id_size != kProductIdSize) {
-        response->error = KM_ERROR_INVALID_INPUT_LENGTH;
-        return;
-    }
-    response->error = ss_manager->SetProductId(product_id.begin());
-#endif
 }
 }  // namespace keymaster

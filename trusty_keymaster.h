@@ -21,10 +21,6 @@
 
 #include "trusty_keymaster_context.h"
 #include "trusty_keymaster_messages.h"
-#ifndef DISABLE_ATAP_SUPPORT
-#include "atap/trusty_atap_ops.h"
-#include "ops/atap_ops_provider.h"
-#endif
 
 namespace keymaster {
 
@@ -137,10 +133,6 @@ private:
     TrustyKeymasterContext* context_;
     keymaster_error_t configure_error_ = KM_ERROR_KEYMASTER_NOT_CONFIGURED;
     Buffer ca_response_;
-#ifndef DISABLE_ATAP_SUPPORT
-    TrustyAtapOps atap_ops_;
-    atap::AtapOpsProvider atap_ops_provider_{&atap_ops_};
-#endif
 };
 
 }  // namespace keymaster

@@ -61,7 +61,6 @@ MODULE_INCLUDES += \
 	lib/lib/storage/include \
 	lib/interface/storage/include \
 	$(NANOPB_DIR) \
-	$(TRUSTY_TOP)/system/iot/attestation/atap \
 
 include make/trusted_app.mk
 

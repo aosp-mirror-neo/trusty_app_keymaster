@@ -13,7 +13,6 @@
 # limitations under the License.
 #
 
-ATAP_DIR := $(TRUSTY_TOP)/system/iot/attestation/atap
 KEYMASTER_ROOT := system/keymaster
 KEYMASTER_DIR := trusty/user/app/keymaster
 NANOPB_DIR := external/nanopb-c
@@ -24,8 +23,6 @@ HOST_SRCS += \
 	$(KEYMASTER_DIR)/second_imei_attestation.cpp \
 	$(KEYMASTER_DIR)/host_unittest/main.cpp \
 	$(KEYMASTER_ROOT)/android_keymaster/logger.cpp \
-	$(ATAP_DIR)/libatap/atap_util.c \
-	$(ATAP_DIR)/libatap/atap_sysdeps_posix.c \
 	$(KEYMASTER_DIR)/keymaster_attributes.pb.c \
 	$(NANOPB_DIR)/pb_common.c \
 	$(NANOPB_DIR)/pb_encode.c \
@@ -40,7 +37,6 @@ HOST_INCLUDE_DIRS := \
 	lib/lib/storage/include \
 	lib/interface/storage/include \
 	$(NANOPB_DIR) \
-	$(ATAP_DIR) \
 
 HOST_FLAGS := -Wpointer-arith \
 	-Wno-deprecated-declarations -fno-exceptions \
