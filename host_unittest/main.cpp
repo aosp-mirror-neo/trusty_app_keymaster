@@ -44,10 +44,6 @@
 #define typeof(x) __typeof__(x)
 #include <trusty_unittest.h>
 
-extern "C" {
-#include <libatap/atap_util.h>
-}
-
 #include <keymaster/android_keymaster_utils.h>
 #include "second_imei_attestation.h"
 #include "secure_storage_manager.h"
@@ -151,65 +147,6 @@ void TestCertChainStorage(AttestationKeySlot key_slot, bool chain_exists) {
     ASSERT_EQ(0, chain.entry_count);
 
 test_abort:;
-}
-
-void TestAtapCertChainStorage(AttestationKeySlot key_slot, bool chain_exists) {
-    keymaster_error_t error = KM_ERROR_OK;
-    keymaster::UniquePtr<uint8_t[]> write_cert[CHAIN_LENGTH];
-    keymaster::UniquePtr<uint8_t[]> write_key;
-    KeymasterKeyBlob key_blob;
-    bool key_exists = false;
-    uint32_t cert_chain_length;
-    AtapCertChain read_chain;
-    AtapCertChain write_chain;
-    memset(&read_chain, 0, sizeof(AtapCertChain));
-    memset(&write_chain, 0, sizeof(AtapCertChain));
-
-    SecureStorageManager* ss_manager = SecureStorageManager::get_instance();
-    ASSERT_NE(nullptr, ss_manager);
-    write_chain.entry_count = CHAIN_LENGTH;
-
-    for (size_t i = 0; i < CHAIN_LENGTH; ++i) {
-        write_cert[i].reset(NewRandBuf(DATA_SIZE));
-        ASSERT_NE(nullptr, write_cert[i].get());
-        write_chain.entries[i].data_length = DATA_SIZE;
-        write_chain.entries[i].data =
-                reinterpret_cast<uint8_t*>(atap_malloc(DATA_SIZE));
-        ASSERT_NE(nullptr, write_chain.entries[i].data);
-        memcpy(write_chain.entries[i].data, write_cert[i].get(), DATA_SIZE);
-    }
-    write_key.reset(NewRandBuf(DATA_SIZE));
-    ASSERT_NE(nullptr, write_key.get());
-    error = ss_manager->WriteAtapKeyAndCertsToStorage(key_slot, write_key.get(),
-                                                      DATA_SIZE, &write_chain);
-    ASSERT_EQ(KM_ERROR_OK, error);
-
-    error = ss_manager->ReadCertChainLength(key_slot, &cert_chain_length);
-    ASSERT_EQ(KM_ERROR_OK, error);
-    ASSERT_EQ(3, cert_chain_length);
-
-    memset(&read_chain, 0, sizeof(AtapCertChain));
-    error = ss_manager->ReadAtapCertChainFromStorage(key_slot, &read_chain);
-    ASSERT_EQ(KM_ERROR_OK, error);
-    ASSERT_EQ(CHAIN_LENGTH, read_chain.entry_count);
-    for (size_t i = 0; i < CHAIN_LENGTH; ++i) {
-        ASSERT_EQ(DATA_SIZE, read_chain.entries[i].data_length);
-        ASSERT_EQ(0, memcmp(write_cert[i].get(), read_chain.entries[i].data,
-                            DATA_SIZE));
-    }
-    key_blob = ss_manager->ReadKeyFromStorage(key_slot, &error);
-    ASSERT_EQ(KM_ERROR_OK, error);
-    ASSERT_EQ(DATA_SIZE, key_blob.key_material_size);
-    ASSERT_NE(nullptr, write_key.get());
-    ASSERT_EQ(0, memcmp(write_key.get(), key_blob.writable_data(), DATA_SIZE));
-
-    error = ss_manager->AttestationKeyExists(key_slot, &key_exists);
-    ASSERT_EQ(KM_ERROR_OK, error);
-    ASSERT_EQ(true, key_exists);
-
-test_abort:
-    free_cert_chain(read_chain);
-    free_cert_chain(write_chain);
 }
 
 void TestCertStorageInvalid(AttestationKeySlot key_slot) {
@@ -504,12 +441,10 @@ TEST_F(KeymasterTest, TestKeyStorageEcdsa) {
 
 TEST_F(KeymasterTest, TestCertChainStorageRsa) {
     TestCertChainStorage(AttestationKeySlot::kRsa, false);
-    TestAtapCertChainStorage(AttestationKeySlot::kRsa, false);
 }
 
 TEST_F(KeymasterTest, TestCertChainStorageEcdsa) {
     TestCertChainStorage(AttestationKeySlot::kEcdsa, false);
-    TestAtapCertChainStorage(AttestationKeySlot::kEcdsa, false);
 }
 
 TEST_F(KeymasterTest, TestRewriteKey) {
@@ -520,8 +455,7 @@ TEST_F(KeymasterTest, TestRewriteKey) {
 
 TEST_F(KeymasterTest, TestRewriteChain) {
     TestCertChainStorage(AttestationKeySlot::kRsa, false);
-    TestAtapCertChainStorage(AttestationKeySlot::kRsa, false);
-    TestCertChainStorage(AttestationKeySlot::kRsa, true);
+    TestCertChainStorage(AttestationKeySlot::kRsa, false);
 }
 
 TEST_F(KeymasterTest, TestCertStorageInvalid) {

@@ -23,7 +23,6 @@
 
 extern "C" {
 #include <hardware/keymaster_defs.h>
-#include <libatap/atap_types.h>
 }
 #include "keymaster_attributes.pb.h"
 #include "trusty_keymaster_messages.h"
@@ -122,14 +121,6 @@ public:
      */
     keymaster_error_t DeleteCertChainFromStorage(AttestationKeySlot key_slot);
 
-    /**
-     * Reads cert chain associated with |key_slot| in ATAP format. Stores
-     * certificate chain in |cert_chain| and caller takes ownership of all
-     * allocated memory.
-     */
-    keymaster_error_t ReadAtapCertChainFromStorage(AttestationKeySlot key_slot,
-                                                   AtapCertChain* cert_chain);
-
     /*
      * Writes the new length of the stored |key_slot| attestation certificate
      * chain. If less than the existing certificate chain length, the chain is
@@ -145,17 +136,6 @@ public:
      */
     keymaster_error_t ReadCertChainLength(AttestationKeySlot key_slot,
                                           uint32_t* cert_chain_length);
-
-    /*
-     * Write a key along with the cert chain to the key/cert file associated
-     * with |key_slot|. cert_cahin is in ATAP types and is intended to be used
-     * by trusty_atap_ops.
-     */
-    keymaster_error_t WriteAtapKeyAndCertsToStorage(
-            AttestationKeySlot key_slot,
-            const uint8_t* key,
-            const uint32_t key_size,
-            const AtapCertChain* cert_chain);
 
     /**
      * Writes the |attestation_uuid|.

@@ -294,36 +294,6 @@ keymaster_error_t SecureStorageManager::DeleteCertChainFromStorage(
     return err;
 }
 
-keymaster_error_t SecureStorageManager::ReadAtapCertChainFromStorage(
-        AttestationKeySlot key_slot,
-        AtapCertChain* cert_chain) {
-    AttestationKey* attestation_key_p;
-    keymaster_error_t err = ReadAttestationKey(key_slot, &attestation_key_p);
-    if (err != KM_ERROR_OK) {
-        CloseSession();
-        return err;
-    }
-    UniquePtr<AttestationKey> attestation_key(attestation_key_p);
-    uint32_t cert_chain_length = attestation_key->certs_count;
-    cert_chain->entry_count = cert_chain_length;
-    if (cert_chain_length == 0) {
-        return KM_ERROR_OK;
-    }
-
-    for (size_t i = 0; i < cert_chain_length; i++) {
-        uint32_t content_size = attestation_key->certs[i].content.size;
-        cert_chain->entries[i].data_length = content_size;
-        uint8_t* buffer = new (std::nothrow) uint8_t[content_size];
-        if (buffer == nullptr) {
-            return KM_ERROR_MEMORY_ALLOCATION_FAILED;
-        }
-        memcpy(buffer, attestation_key->certs[i].content.bytes, content_size);
-        cert_chain->entries[i].data = buffer;
-    }
-
-    return KM_ERROR_OK;
-}
-
 keymaster_error_t SecureStorageManager::ReadCertChainLength(
         AttestationKeySlot key_slot,
         uint32_t* cert_chain_length) {
@@ -336,37 +306,6 @@ keymaster_error_t SecureStorageManager::ReadCertChainLength(
     UniquePtr<AttestationKey> attestation_key(attestation_key_p);
     *cert_chain_length = attestation_key->certs_count;
     return KM_ERROR_OK;
-}
-
-keymaster_error_t SecureStorageManager::WriteAtapKeyAndCertsToStorage(
-        AttestationKeySlot key_slot,
-        const uint8_t* key,
-        const uint32_t key_size,
-        const AtapCertChain* cert_chain) {
-    if (key_size > kKeySizeMax || cert_chain->entry_count > kCertSizeMax) {
-        return KM_ERROR_INVALID_ARGUMENT;
-    }
-    UniquePtr<AttestationKey> attestation_key(
-            new (std::nothrow) AttestationKey(AttestationKey_init_zero));
-    if (attestation_key.get() == nullptr) {
-        return KM_ERROR_MEMORY_ALLOCATION_FAILED;
-    }
-    attestation_key->has_key = true;
-    attestation_key->key.size = key_size;
-    memcpy(attestation_key->key.bytes, key, key_size);
-    for (size_t i = 0; i < cert_chain->entry_count; i++) {
-        attestation_key->certs[i].content.size =
-                cert_chain->entries[i].data_length;
-        memcpy(attestation_key->certs[i].content.bytes,
-               cert_chain->entries[i].data, cert_chain->entries[i].data_length);
-    }
-    attestation_key->certs_count = cert_chain->entry_count;
-    keymaster_error_t err =
-            WriteAttestationKey(key_slot, attestation_key.get(), true);
-    if (err != KM_ERROR_OK) {
-        CloseSession();
-    }
-    return err;
 }
 
 keymaster_error_t SecureStorageManager::DeleteKey(AttestationKeySlot key_slot,
