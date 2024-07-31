@@ -64,3 +64,7 @@ message AttestationKey {
 message AttestationCert {
   required bytes content = 1 [(nanopb).max_size=2048];
 };
+
+message UdsCerts{
+  repeated AttestationCert certs = 1 [(nanopb).max_count=3];
+};
