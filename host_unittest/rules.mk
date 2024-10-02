@@ -49,6 +49,9 @@ HOST_FLAGS := -Wpointer-arith \
 HOST_LIBS := \
 	stdc++ \
 
+HOST_DEPS := \
+	trusty/user/base/host/unittest \
+
 # These rules are used to force .pb.h file to be generated before compiling
 # these files.
 $(KEYMASTER_DIR)/secure_storage_manager.cpp: $(NANOPB_GENERATED_HEADER)
