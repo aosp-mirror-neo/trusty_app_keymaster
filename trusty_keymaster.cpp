@@ -32,7 +32,7 @@ GetVersion2Response TrustyKeymaster::GetVersion2(
         break;
 
     case 4:
-        context_->SetKmVersion(KmVersion::KEYMINT_3);
+        context_->SetKmVersion(KmVersion::KEYMINT_4);
         break;
 
     default:
