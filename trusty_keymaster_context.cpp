@@ -213,6 +213,7 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
         case KM_TAG_CERTIFICATE_SERIAL:
         case KM_TAG_CERTIFICATE_SUBJECT:
         case KM_TAG_RESET_SINCE_ID_ROTATION:
+        case KM_TAG_MODULE_HASH:
             break;
 
         // Unimplemented tags for which we return an error.
