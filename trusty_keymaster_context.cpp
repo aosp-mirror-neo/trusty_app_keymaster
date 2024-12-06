@@ -213,6 +213,7 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
         case KM_TAG_CERTIFICATE_SERIAL:
         case KM_TAG_CERTIFICATE_SUBJECT:
         case KM_TAG_RESET_SINCE_ID_ROTATION:
+        case KM_TAG_MODULE_HASH:
             break;
 
         // Unimplemented tags for which we return an error.
@@ -329,6 +330,11 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
     }
     if (boot_patchlevel_.has_value()) {
         hw_enforced->push_back(TAG_BOOT_PATCHLEVEL, boot_patchlevel_.value());
+    }
+    if (module_hash_.has_value()) {
+        keymaster_blob_t mod_hash = {module_hash_.value().data(),
+                                     module_hash_.value().size()};
+        sw_enforced->push_back(TAG_MODULE_HASH, mod_hash);
     }
 
     if (sw_enforced->is_valid() != AuthorizationSet::OK)
@@ -757,6 +763,24 @@ keymaster_error_t TrustyKeymasterContext::AddRngEntropy(const uint8_t* buf,
     if (trusty_rng_add_entropy(buf, length) != 0)
         return KM_ERROR_UNKNOWN_ERROR;
     return KM_ERROR_OK;
+}
+
+keymaster_error_t TrustyKeymasterContext::SetModuleHash(
+        const keymaster_blob_t& mod_hash) {
+    std::vector<uint8_t> module_hash(mod_hash.data,
+                                     mod_hash.data + mod_hash.data_length);
+    if (module_hash_.has_value()) {
+        if (module_hash != module_hash_.value()) {
+            // Can't set module hash to a different value.
+            return KM_ERROR_MODULE_HASH_ALREADY_SET;
+        } else {
+            LOG_I("module hash already set, ignoring repeated attempt to set same info");
+            return KM_ERROR_OK;
+        }
+    } else {
+        module_hash_ = module_hash;
+        return KM_ERROR_OK;
+    }
 }
 
 bool TrustyKeymasterContext::SeedRngIfNeeded() const {
