@@ -198,6 +198,10 @@ public:
     keymaster_error_t SetModuleHash(
             const keymaster_blob_t& module_hash) override;
 
+    virtual std::optional<std::vector<uint8_t>> GetModuleHash() const override {
+        return module_hash_;
+    }
+
 private:
     bool SeedRngIfNeeded() const;
     bool ShouldReseedRng() const;
