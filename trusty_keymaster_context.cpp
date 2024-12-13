@@ -193,6 +193,7 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
         case KM_TAG_ROOT_OF_TRUST:
         case KM_TAG_UNIQUE_ID:
         case KM_TAG_IDENTITY_CREDENTIAL_KEY:
+        case KM_TAG_MODULE_HASH:
             return KM_ERROR_INVALID_KEY_BLOB;
 
         // Tags used only to provide information for certificate creation, but
@@ -213,7 +214,6 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
         case KM_TAG_CERTIFICATE_SERIAL:
         case KM_TAG_CERTIFICATE_SUBJECT:
         case KM_TAG_RESET_SINCE_ID_ROTATION:
-        case KM_TAG_MODULE_HASH:
             break;
 
         // Unimplemented tags for which we return an error.
@@ -330,11 +330,6 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
     }
     if (boot_patchlevel_.has_value()) {
         hw_enforced->push_back(TAG_BOOT_PATCHLEVEL, boot_patchlevel_.value());
-    }
-    if (module_hash_.has_value()) {
-        keymaster_blob_t mod_hash = {module_hash_.value().data(),
-                                     module_hash_.value().size()};
-        sw_enforced->push_back(TAG_MODULE_HASH, mod_hash);
     }
 
     if (sw_enforced->is_valid() != AuthorizationSet::OK)
