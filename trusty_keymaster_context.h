@@ -195,6 +195,13 @@ public:
         return boot_patchlevel_;
     }
 
+    keymaster_error_t SetModuleHash(
+            const keymaster_blob_t& module_hash) override;
+
+    virtual std::optional<std::vector<uint8_t>> GetModuleHash() const override {
+        return module_hash_;
+    }
+
 private:
     bool SeedRngIfNeeded() const;
     bool ShouldReseedRng() const;
@@ -257,6 +264,7 @@ private:
             trusty_remote_provisioning_context_;
     std::optional<uint32_t> vendor_patchlevel_;
     std::optional<uint32_t> boot_patchlevel_;
+    std::optional<std::vector<uint8_t>> module_hash_;
     mutable std::vector<uint8_t> unique_id_hbk_;
 };
 
