@@ -193,6 +193,7 @@ keymaster_error_t TrustyKeymasterContext::SetAuthorizations(
         case KM_TAG_ROOT_OF_TRUST:
         case KM_TAG_UNIQUE_ID:
         case KM_TAG_IDENTITY_CREDENTIAL_KEY:
+        case KM_TAG_MODULE_HASH:
             return KM_ERROR_INVALID_KEY_BLOB;
 
         // Tags used only to provide information for certificate creation, but
@@ -757,6 +758,24 @@ keymaster_error_t TrustyKeymasterContext::AddRngEntropy(const uint8_t* buf,
     if (trusty_rng_add_entropy(buf, length) != 0)
         return KM_ERROR_UNKNOWN_ERROR;
     return KM_ERROR_OK;
+}
+
+keymaster_error_t TrustyKeymasterContext::SetModuleHash(
+        const keymaster_blob_t& mod_hash) {
+    std::vector<uint8_t> module_hash(mod_hash.data,
+                                     mod_hash.data + mod_hash.data_length);
+    if (module_hash_.has_value()) {
+        if (module_hash != module_hash_.value()) {
+            // Can't set module hash to a different value.
+            return KM_ERROR_MODULE_HASH_ALREADY_SET;
+        } else {
+            LOG_I("module hash already set, ignoring repeated attempt to set same info");
+            return KM_ERROR_OK;
+        }
+    } else {
+        module_hash_ = module_hash;
+        return KM_ERROR_OK;
+    }
 }
 
 bool TrustyKeymasterContext::SeedRngIfNeeded() const {

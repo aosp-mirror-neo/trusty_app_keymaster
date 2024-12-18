@@ -669,6 +669,12 @@ static long keymaster_dispatch_non_secure(keymaster_chan_ctx* ctx,
         return do_dispatch(&TrustyKeymaster::GetRootOfTrust, msg, payload_size,
                            out, out_size);
 
+    case KM_SET_ADDITIONAL_ATTESTATION_INFO:
+        LOG_D("Dispatching KM_SET_ADDITIONAL_ATTESTATION_INFO, size %d",
+              payload_size);
+        return do_dispatch(&TrustyKeymaster::SetAdditionalAttestationInfo, msg,
+                           payload_size, out, out_size);
+
     case KM_GET_HW_INFO:
         LOG_D("Dispatching KM_GET_HW_INFO, size %d", payload_size);
         return do_dispatch(&TrustyKeymaster::GetHwInfo, msg, payload_size, out,
