@@ -203,9 +203,6 @@ public:
     }
 
 private:
-    bool SeedRngIfNeeded() const;
-    bool ShouldReseedRng() const;
-    bool ReseedRng();
     bool InitializeAuthTokenKey();
     keymaster_error_t SetAuthorizations(const AuthorizationSet& key_description,
                                         keymaster_key_origin_t origin,
@@ -247,8 +244,6 @@ private:
     UniquePtr<KeyFactory> rsa_factory_;
     UniquePtr<KeyFactory> tdes_factory_;
 
-    bool rng_initialized_;
-    mutable int calls_since_reseed_;
     uint8_t auth_token_key_[kAuthTokenKeySize];
     bool auth_token_key_initialized_;
 
