@@ -52,6 +52,16 @@ HOST_LIBS := \
 HOST_DEPS := \
 	trusty/user/base/host/unittest \
 
+# Builds that don't support TP set SECURE_STORAGE_USE_TDP to tell apps that
+# don't have a strong reason to use TP to use TDP for secure storage instead of
+# TP.
+ifeq (true,$(call TOBOOL,$(SECURE_STORAGE_USE_TDP)))
+KEYMASTER_STORAGE_PORT ?= STORAGE_CLIENT_TDP_PORT
+else
+KEYMASTER_STORAGE_PORT ?= STORAGE_CLIENT_TP_PORT
+endif
+HOST_FLAGS += -DKEYMASTER_STORAGE_PORT=$(KEYMASTER_STORAGE_PORT)
+
 # These rules are used to force .pb.h file to be generated before compiling
 # these files.
 $(KEYMASTER_DIR)/secure_storage_manager.cpp: $(NANOPB_GENERATED_HEADER)
