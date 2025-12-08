@@ -40,7 +40,6 @@
 #include <keymaster/operation.h>
 #include <keymaster/wrapped_key.h>
 #include <lib/hwkey/hwkey.h>
-#include <lib/rng/trusty_rng.h>
 #include <openssl/hmac.h>
 
 #include "second_imei_attestation.h"
@@ -72,8 +71,6 @@ namespace keymaster {
 
 namespace {
 static const int kAesKeySize = TRUSTY_KM_WRAPPING_KEY_SIZE;
-static const int kCallsBetweenRngReseeds = 32;
-static const int kRngReseedSize = 64;
 static const uint8_t kMasterKeyDerivationData[kAesKeySize] = "KeymasterMaster";
 
 bool UpgradeIntegerTag(keymaster_tag_t tag,
@@ -103,9 +100,7 @@ bool UpgradeIntegerTag(keymaster_tag_t tag,
 TrustyKeymasterContext::TrustyKeymasterContext()
         : AttestationContext(KmVersion::KEYMASTER_4),
           enforcement_policy_(this),
-          secure_deletion_secret_storage_(*this /* random_source */),
-          rng_initialized_(false),
-          calls_since_reseed_(0) {
+          secure_deletion_secret_storage_(*this /* random_source */) {
     LOG_D("Creating TrustyKeymaster");
     rsa_factory_.reset(new (std::nothrow) RsaKeyFactory(*this /* blob_maker */,
                                                         *this /* context */));
@@ -755,8 +750,7 @@ keymaster_error_t TrustyKeymasterContext::DeleteAllKeys() const {
 
 keymaster_error_t TrustyKeymasterContext::AddRngEntropy(const uint8_t* buf,
                                                         size_t length) const {
-    if (trusty_rng_add_entropy(buf, length) != 0)
-        return KM_ERROR_UNKNOWN_ERROR;
+    // Trusty uses a TRNG and does not require entropy donations
     return KM_ERROR_OK;
 }
 
@@ -776,39 +770,6 @@ keymaster_error_t TrustyKeymasterContext::SetModuleHash(
         module_hash_ = module_hash;
         return KM_ERROR_OK;
     }
-}
-
-bool TrustyKeymasterContext::SeedRngIfNeeded() const {
-    if (ShouldReseedRng())
-        const_cast<TrustyKeymasterContext*>(this)->ReseedRng();
-    return rng_initialized_;
-}
-
-bool TrustyKeymasterContext::ShouldReseedRng() const {
-    if (!rng_initialized_) {
-        LOG_I("RNG not initialized, reseed");
-        return true;
-    }
-
-    if (++calls_since_reseed_ % kCallsBetweenRngReseeds == 0) {
-        LOG_I("Periodic reseed");
-        return true;
-    }
-    return false;
-}
-
-bool TrustyKeymasterContext::ReseedRng() {
-    uint8_t rand_seed[kRngReseedSize];
-    memset(rand_seed, 0, kRngReseedSize);
-    if (trusty_rng_hw_rand(rand_seed, kRngReseedSize) != 0) {
-        LOG_E("Failed to get bytes from HW RNG");
-        return false;
-    }
-    LOG_I("Reseeding with %d bytes from HW RNG", kRngReseedSize);
-    trusty_rng_add_entropy(rand_seed, kRngReseedSize);
-
-    rng_initialized_ = true;
-    return true;
 }
 
 // Gee wouldn't it be nice if the crypto service headers defined this.

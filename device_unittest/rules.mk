@@ -62,5 +62,15 @@ MODULE_INCLUDES += \
 	lib/interface/storage/include \
 	$(NANOPB_DIR) \
 
+# Builds that don't support TP set SECURE_STORAGE_USE_TDP to tell apps that
+# don't have a strong reason to use TP to use TDP for secure storage instead of
+# TP.
+ifeq (true,$(call TOBOOL,$(SECURE_STORAGE_USE_TDP)))
+KEYMASTER_STORAGE_PORT ?= STORAGE_CLIENT_TDP_PORT
+else
+KEYMASTER_STORAGE_PORT ?= STORAGE_CLIENT_TP_PORT
+endif
+MODULE_DEFINES += KEYMASTER_STORAGE_PORT=$(KEYMASTER_STORAGE_PORT)
+
 include make/trusted_app.mk
 

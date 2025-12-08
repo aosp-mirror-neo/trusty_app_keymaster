@@ -114,7 +114,7 @@ SecureStorageManager* SecureStorageManager::get_instance(
         }
     }
     if (instance.session_handle_ == STORAGE_INVALID_SESSION) {
-        storage_open_session(&instance.session_handle_, STORAGE_CLIENT_TP_PORT);
+        storage_open_session(&instance.session_handle_, KEYMASTER_STORAGE_PORT);
         if (instance.session_handle_ == STORAGE_INVALID_SESSION) {
             return nullptr;
         }
