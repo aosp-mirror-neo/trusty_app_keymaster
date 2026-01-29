@@ -58,6 +58,12 @@ static const int kAttestationIdLengthMax = 64;
 static const int kKeySizeMax = 2048;
 static const int kCertSizeMax = 2048;
 
+#if STORAGE_SUPPORT_STAGE_DURING_UDC
+#define OP_COMPLETE_FLAGS (STORAGE_OP_COMPLETE | STORAGE_OP_STAGE_IF_CHECKPOINT)
+#else /* STORAGE_SUPPORT_STAGE_DURING_UDC */
+#define OP_COMPLETE_FLAGS STORAGE_OP_COMPLETE
+#endif /* STORAGE_SUPPORT_STAGE_DURING_UDC */
+
 const char* GetKeySlotStr(AttestationKeySlot key_slot) {
     switch (key_slot) {
     case AttestationKeySlot::kRsa:
@@ -314,7 +320,7 @@ keymaster_error_t SecureStorageManager::DeleteKey(AttestationKeySlot key_slot,
     snprintf(key_file, kStorageIdLengthMax, "%s.%s", kAttestKeyCertPrefix,
              GetKeySlotStr(key_slot));
     int rc = storage_delete_file(session_handle_, key_file,
-                                 commit ? STORAGE_OP_COMPLETE : 0);
+                                 commit ? OP_COMPLETE_FLAGS : 0);
     if (rc < 0 && rc != ERR_NOT_FOUND) {
         LOG_E("Error: [%d] deleting storage object '%s'", rc, key_file);
         if (commit) {
@@ -582,7 +588,7 @@ keymaster_error_t SecureStorageManager::SetAttestationIdsKM3(
 
 keymaster_error_t SecureStorageManager::ClearAttestationIds() {
     int rc = storage_delete_file(session_handle_, kAttestationIdsFileName,
-                                 STORAGE_OP_COMPLETE);
+                                 OP_COMPLETE_FLAGS);
     if (rc < 0 && rc != ERR_NOT_FOUND) {
         LOG_E("Error: [%d] deleting attestation IDs file", rc);
         CloseSession();
@@ -922,7 +928,7 @@ keymaster_error_t SecureStorageManager::TranslateLegacyFormat() {
     }
 
     // Commit the pending transactions.
-    rc = storage_end_transaction(session_handle_, STORAGE_OP_COMPLETE);
+    rc = storage_end_transaction(session_handle_, OP_COMPLETE_FLAGS);
     if (rc < 0) {
         LOG_E("Error: failed to commit write transaction to translate file"
               " format.\n");
@@ -973,7 +979,7 @@ keymaster_error_t SecureStorageManager::LegacySecureStorageWrite(
         return KM_ERROR_UNKNOWN_ERROR;
     }
     rc = storage_write(file.get_file_handle(), 0, data, data_size,
-                       STORAGE_OP_COMPLETE);
+                       OP_COMPLETE_FLAGS);
     if (rc < 0) {
         LOG_E("Error: [%d] writing storage object '%s'", rc, filename);
         return KM_ERROR_UNKNOWN_ERROR;
