@@ -16,7 +16,6 @@
 LOCAL_DIR := $(GET_LOCAL_DIR)
 NANOPB_DIR := external/nanopb-c
 LIBCPPBOR_DIR := $(if $(wildcard system/libcppbor),system/libcppbor,external/libcppbor)
-STORAGE_DIR := trusty/user/app/storage
 
 MODULE := $(LOCAL_DIR)
 
@@ -181,14 +180,6 @@ endif
 TRUSTY_KM_RKP_VERSION ?= 3
 ifdef TRUSTY_KM_RKP_VERSION
     MODULE_COMPILEFLAGS += -DTRUSTY_KM_RKP_VERSION=$(TRUSTY_KM_RKP_VERSION)
-endif
-
-# If storage supports staging changes during (possible) A/B Updates, we won't be
-# able to commit during updates or before vold knows whether it needs to
-# checkpoint. Stage changes instead.
-include $(STORAGE_DIR)/default_storage_flags.mk
-ifeq (true,$(call TOBOOL,$(STORAGE_SUPPORT_STAGE_DURING_UDC)))
-    MODULE_DEFINES += STORAGE_SUPPORT_STAGE_DURING_UDC=1
 endif
 
 include $(LOCAL_DIR)/ipc/rules.mk
