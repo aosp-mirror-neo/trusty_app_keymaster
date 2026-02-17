@@ -18,6 +18,7 @@ NANOPB_DIR := external/nanopb-c
 LIBCPPBOR_DIR := $(if $(wildcard system/libcppbor),system/libcppbor,external/libcppbor)
 
 MODULE := $(LOCAL_DIR)
+TRUSTY_APP_NAME := keymaster
 
 MANIFEST := $(LOCAL_DIR)/manifest.json
 
