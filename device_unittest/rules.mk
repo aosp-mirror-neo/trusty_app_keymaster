@@ -18,6 +18,7 @@ KEYMASTER_ROOT := system/keymaster
 KEYMASTER_DIR := trusty/user/app/keymaster
 NANOPB_DIR := external/nanopb-c
 MODULE := $(LOCAL_DIR)
+TRUSTY_APP_NAME := keymaster-device_unittest
 
 MANIFEST := $(LOCAL_DIR)/manifest.json
 
